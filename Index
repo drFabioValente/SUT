@@ -1,0 +1,798 @@
+
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scheda Terapia Ricovero</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --panel: #ffffff;
+      --line: #dbe3ee;
+      --text: #1e2a36;
+      --muted: #64748b;
+      --accent: #1d4ed8;
+      --accent-2: #0f766e;
+      --danger: #b91c1c;
+      --soft: #eef4ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+    .app { max-width: 1680px; margin: 0 auto; padding: 16px; }
+    h1, h2, h3 { margin: 0 0 10px; }
+    .sub { color: var(--muted); margin-bottom: 12px; }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(120px, 1fr));
+      gap: 10px;
+    }
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(150px, 1fr));
+      gap: 10px;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    input, select, textarea, button { font: inherit; }
+    input, select, textarea {
+      width: 100%;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: white;
+    }
+    textarea { min-height: 68px; resize: vertical; }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0 0;
+    }
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: var(--accent);
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button.secondary { background: #334155; }
+    button.ghost {
+      background: white;
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+    button.green { background: var(--accent-2); }
+    button.red { background: var(--danger); }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 8px;
+      vertical-align: top;
+      text-align: left;
+      font-size: 13px;
+    }
+    th {
+      position: sticky;
+      top: 0;
+      background: var(--soft);
+      z-index: 1;
+      white-space: nowrap;
+    }
+    .table-wrap {
+      overflow: auto;
+      max-height: 56vh;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+    .mini { font-size: 12px; color: var(--muted); }
+    .row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .small-btn { padding: 6px 8px; border-radius: 8px; font-size: 12px; }
+    .print-sheet {
+      background: white;
+      color: black;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px;
+      overflow: auto;
+    }
+    .print-header {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .box {
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 8px;
+      min-height: 52px;
+    }
+    .sheet-table th, .sheet-table td {
+      border: 1px solid #94a3b8;
+      padding: 6px;
+      font-size: 11px;
+    }
+    .sheet-table th {
+      background: #f1f5f9;
+      position: static;
+      text-align: center;
+    }
+    .center { text-align: center; }
+    .day-head { min-width: 140px; }
+    .day-cell {
+      min-width: 140px;
+      height: 92px;
+      font-size: 10px;
+      line-height: 1.3;
+    }
+    .day-cell .time {
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+    .day-cell .sig {
+      margin-top: 8px;
+      border-top: 1px solid #94a3b8;
+      padding-top: 4px;
+      color: #334155;
+      min-height: 18px;
+    }
+    .warning {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      color: #9a3412;
+      padding: 10px 12px;
+      border-radius: 10px;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+    .hidden { display: none; }
+    .w-via { min-width: 140px; }
+    .w-form { min-width: 110px; }
+    .w-time { min-width: 110px; }
+    .footer-note { margin-top: 8px; font-size: 11px; color: #334155; }
+    @media (max-width: 1200px) {
+      .grid { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+      .print-header { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media print {
+      body { background: white; }
+      .no-print, .panel:not(.panel-print), .app > h1, .app > .sub { display: none !important; }
+      .panel-print {
+        display: block !important;
+        border: 0;
+        box-shadow: none;
+        padding: 0;
+        margin: 0;
+      }
+      .print-sheet { border: 0; padding: 0; overflow: visible; }
+      @page { size: A4 landscape; margin: 8mm; }
+    }
+  
+.print-hospital-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+}
+.print-hospital-header .left h2 { margin:0; font-size:18px;}
+.print-hospital-header .left h3 { margin:0; font-size:16px;}
+.print-hospital-header .right { text-align:right;}
+
+@media print {
+  @page { size: A4 landscape; margin: 8mm; }
+  body { -webkit-print-color-adjust: exact; }
+}
+
+
+.print-hospital-header{
+  display:grid;
+  grid-template-columns: 1fr auto auto;
+  align-items:center;
+  column-gap:18px;
+  margin-bottom:10px;
+}
+.print-hospital-header .ph-spacer{width:90px;}
+.print-hospital-header .ph-center{text-align:center;}
+.print-hospital-header .ph-title{font-size:24px;font-weight:700;line-height:1.15;}
+.print-hospital-header .ph-subtitle{font-size:20px;font-weight:700;line-height:1.15;margin-top:4px;}
+.print-hospital-header .ph-resp{font-size:16px;margin-top:8px;}
+.print-hospital-header .ph-logo-wrap{justify-self:end;}
+.print-hospital-header .ph-logo{height:86px;width:auto;display:block;}
+
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}
+
+</style>
+</head>
+<body>
+  <div class="app">
+    <h1>Scheda terapia ricovero</h1>
+    <div class="sub">Modifica rapida delle terapie, scheda infermieristica settimanale stampabile in PDF ed esportazione in XLSX.</div>
+
+    <div class="panel no-print">
+      <h2>Dati paziente</h2>
+      <div class="grid">
+        <div><label>Nome e cognome</label><input id="p_nome" placeholder="Es. Apuzzo Luigi"></div>
+        <div><label>Data di nascita</label><input id="p_nascita" type="date"></div>
+        <div><label>Reparto</label><input id="p_reparto" placeholder="Es. Cardiologia"></div>
+        <div><label>Numero cartella / letto</label><input id="p_cartella" placeholder="Es. 12345 / Letto 6"></div>
+        <div><label>Data ricovero</label><input id="p_ricovero" type="date"></div>
+        <div><label>Medico</label><input id="p_medico" placeholder="Es. Dr. Fabio"></div>
+      </div>
+      <div class="toolbar">
+        <button class="green" onclick="saveLocal()">Salva nel browser</button>
+        <button class="ghost" onclick="loadLocal()">Ricarica dati salvati</button>
+        <button class="ghost" onclick="downloadJSON()">Esporta backup JSON</button>
+        <button class="ghost" onclick="document.getElementById('jsonFile').click()">Importa backup JSON</button>
+        <input id="jsonFile" class="hidden" type="file" accept="application/json" onchange="importJSON(event)">
+      </div>
+    </div>
+
+    <div class="panel no-print">
+      <h2>Terapie</h2>
+      <div class="toolbar" style="margin-bottom:10px;">
+        <button onclick="addRow()">+ Nuova terapia</button>
+                <button class="ghost" onclick="sortRows()">Ordina per fascia/orario</button>
+        <button class="green" onclick="confirmNextWeek()">Conferma terapia settimana successiva</button>
+        <button class="red" onclick="clearAllRows()">Svuota righe</button>
+      </div>
+      <div class="table-wrap">
+        <table id="therapyTable">
+          <thead>
+            <tr>
+              <th>Attiva</th>
+              <th>Farmaco</th>
+              <th>Dose</th>
+              <th>Posologia</th>
+                            <th class="w-via">Via</th>
+              <th>Mattina</th>
+              <th>Pomeriggio</th>
+              <th>Sera</th>
+              <th>Data inizio</th>
+              <th>Data fine</th>
+              <th>Note / istruzioni</th>
+              <th>Azioni</th>
+            </tr>
+          </thead>
+          <tbody id="therapyBody"></tbody>
+        </table>
+      </div>
+      <div class="warning">Per una modifica clinicamente pulita: chiudi la terapia precedente con una data fine e aggiungi una nuova riga aggiornata.</div>
+    </div>
+
+    <div class="panel no-print">
+      <h2>Stampa scheda infermieristica settimanale</h2>
+      <div class="grid-4">
+        <div>
+          <label>Data iniziale scheda</label>
+          <input id="printStartDate" type="date">
+        </div>
+        <div><label>Numero giorni</label><input value="7 giorni" readonly></div><input id="daysCount" type="hidden" value="7">
+        <div>
+          <label>Mostra anche terapie non attive</label>
+          <select id="showInactive">
+            <option value="no">No</option>
+            <option value="yes">Sì</option>
+          </select>
+        </div>
+        <div>
+          <label>Note di reparto</label>
+          <input id="giornoNote" placeholder="Es. sospesa nel pomeriggio, monitorare PA">
+        </div>
+      </div>
+      <div class="toolbar">
+        <button class="green" onclick="renderPrintSheet(); window.print();">Stampa / Salva PDF</button>
+        <button class="secondary" onclick="exportXLSX()">Esporta XLSX</button>
+        <button class="ghost" onclick="renderPrintSheet()">Aggiorna anteprima</button>
+      </div>
+      <div class="mini" style="margin-top:8px;">La firma infermieristica è prevista in ogni singola cella di somministrazione, non più come firma generale.</div>
+    </div>
+
+    <div class="panel panel-print">
+      <div id="printSheet" class="print-sheet">
+<div class="print-hospital-header">
+  <div class="left">
+    <h2>A.O.S DEI COLLI - OSPEDALE MONALDI</h2>
+    <h3>U.O.C CARDIOLOGIA - AREA MULTIDISCIPLINARE T ZONE</h3>
+    <div>Responsabile dr Claudio Marra</div>
+  </div>
+  <div class="right">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Logo_Ospedali_dei_Colli.png/320px-Logo_Ospedali_dei_Colli.png" style="height:80px;">
+  </div>
+</div>
+</div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script>
+    const therapyBody = document.getElementById('therapyBody');
+    const mattinaOptions = ['', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00'];
+    const pomeriggioOptions = ['', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'];
+    const seraOptions = ['', '20:00', '21:00', '22:00', '23:00', '24:00'];
+
+    function todayISO() {
+      const d = new Date();
+      const offset = d.getTimezoneOffset();
+      const local = new Date(d.getTime() - offset * 60000);
+      return local.toISOString().slice(0, 10);
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function selectHtml(options, selected, cls) {
+      return `<select class="${cls}">${options.map(v => `<option value="${v}" ${selected===v ? 'selected' : ''}>${v || '—'}</option>`).join('')}</select>`;
+    }
+
+    function createRow(data = {}) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input type="checkbox" class="attiva" ${data.attiva !== false ? 'checked' : ''}></td>
+        <td><input class="farmaco" value="${escapeHtml(data.farmaco || '')}" placeholder="Nome farmaco"></td>
+        <td><input class="dose" value="${escapeHtml(data.dose || '')}" placeholder="Es. 1 cp / 1 fiala"></td>
+        <td><input class="posologia" value="${escapeHtml(data.posologia || '')}" placeholder="Es. 5 mg"></td>
+        <td>
+          <select class="via">
+            ${['Orale','Endovena','Intramuscolo','Sottocutanea','Sublinguale','Nebulizzazione','Topica','Altro'].map(v => `<option ${data.via===v?'selected':''}>${v}</option>`).join('')}
+          </select>
+        </td>
+        <td>${selectHtml(mattinaOptions, data.mattina || '', 'mattina')}</td>
+        <td>${selectHtml(pomeriggioOptions, data.pomeriggio || '', 'pomeriggio')}</td>
+        <td>${selectHtml(seraOptions, data.sera || '', 'sera')}</td>
+        <td><input class="inizio" type="date" value="${escapeHtml(data.inizio || '')}"></td>
+        <td><input class="fine" type="date" value="${escapeHtml(data.fine || '')}"></td>
+        <td><textarea class="note" placeholder="Istruzioni, sospensione, giorni alterni, ecc.">${escapeHtml(data.note || '')}</textarea></td>
+        <td>
+          <div class="row-actions">
+            <button class="small-btn ghost" type="button" onclick="duplicateRow(this)">Duplica</button>
+            <button class="small-btn red" type="button" onclick="deleteRow(this)">Elimina</button>
+          </div>
+        </td>
+      `;
+      therapyBody.appendChild(tr);
+    }
+
+    function addRow() {
+      createRow({
+        inizio: document.getElementById('p_ricovero').value || todayISO(),
+        formulazione: 'Compressa',
+        via: 'Orale'
+      });
+    }
+
+    function readRow(tr) {
+      return {
+        attiva: tr.querySelector('.attiva').checked,
+        farmaco: tr.querySelector('.farmaco').value.trim(),
+        dose: tr.querySelector('.dose').value.trim(),
+        posologia: tr.querySelector('.posologia').value.trim(),
+        via: tr.querySelector('.via').value,
+        mattina: tr.querySelector('.mattina').value,
+        pomeriggio: tr.querySelector('.pomeriggio').value,
+        sera: tr.querySelector('.sera').value,
+        inizio: tr.querySelector('.inizio').value,
+        fine: tr.querySelector('.fine').value,
+        note: tr.querySelector('.note').value.trim()
+      };
+    }
+
+    function duplicateRow(btn) {
+      createRow(readRow(btn.closest('tr')));
+      renderPrintSheet();
+    }
+
+    function deleteRow(btn) {
+      btn.closest('tr').remove();
+      renderPrintSheet();
+    }
+
+    function clearAllRows() {
+      if (!confirm('Eliminare tutte le righe terapia?')) return;
+      therapyBody.innerHTML = '';
+      addRow();
+      renderPrintSheet();
+    }
+
+    function getData() {
+      return {
+        paziente: {
+          nome: document.getElementById('p_nome').value.trim(),
+          nascita: document.getElementById('p_nascita').value,
+          reparto: document.getElementById('p_reparto').value.trim(),
+          cartella: document.getElementById('p_cartella').value.trim(),
+          ricovero: document.getElementById('p_ricovero').value,
+          medico: document.getElementById('p_medico').value.trim()
+        },
+        printMeta: {
+          printStartDate: document.getElementById('printStartDate').value,
+          daysCount: 7,
+          showInactive: document.getElementById('showInactive').value,
+          giornoNote: document.getElementById('giornoNote').value.trim()
+        },
+        terapie: Array.from(document.querySelectorAll('#therapyBody tr')).map(readRow)
+      };
+    }
+
+    function setData(data) {
+      if (!data) return;
+      const p = data.paziente || {};
+      document.getElementById('p_nome').value = p.nome || '';
+      document.getElementById('p_nascita').value = p.nascita || '';
+      document.getElementById('p_reparto').value = p.reparto || '';
+      document.getElementById('p_cartella').value = p.cartella || '';
+      document.getElementById('p_ricovero').value = p.ricovero || '';
+      document.getElementById('p_medico').value = p.medico || '';
+
+      const m = data.printMeta || {};
+      document.getElementById('printStartDate').value = m.printStartDate || p.ricovero || todayISO();
+      document.getElementById('showInactive').value = m.showInactive || 'no';
+      document.getElementById('giornoNote').value = m.giornoNote || '';
+
+      therapyBody.innerHTML = '';
+      (data.terapie || []).forEach(createRow);
+      if (!data.terapie || !data.terapie.length) addRow();
+      renderPrintSheet();
+    }
+
+    function saveLocal() {
+      localStorage.setItem('scheda-terapia-ricovero-v3', JSON.stringify(getData()));
+      alert('Dati salvati nel browser.');
+    }
+
+    function loadLocal() {
+      const raw = localStorage.getItem('scheda-terapia-ricovero-v3');
+      if (!raw) {
+        alert('Nessun salvataggio trovato nel browser.');
+        return;
+      }
+      setData(JSON.parse(raw));
+    }
+
+    function safeName(v) {
+      return String(v || 'file').replace(/[^a-z0-9]+/gi, '_').replace(/^_|_$/g, '');
+    }
+
+    function downloadJSON() {
+      const blob = new Blob([JSON.stringify(getData(), null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `backup_terapia_${safeName(document.getElementById('p_nome').value || 'paziente')}.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function importJSON(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          setData(JSON.parse(reader.result));
+        } catch {
+          alert('File JSON non valido.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function formatDateIT(d) {
+      if (!d) return '';
+      const [y,m,day] = d.split('-');
+      return `${day}/${m}/${y}`;
+    }
+
+    function plusDays(isoDate, days) {
+      const d = new Date(isoDate + 'T00:00:00');
+      d.setDate(d.getDate() + days);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function weekdayName(isoDate) {
+      const names = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+      const d = new Date(isoDate + 'T00:00:00');
+      return names[d.getDay()];
+    }
+
+    function therapyTimes(t) {
+      return [
+        t.mattina ? `Mattina ${t.mattina}` : '',
+        t.pomeriggio ? `Pomeriggio ${t.pomeriggio}` : '',
+        t.sera ? `Sera ${t.sera}` : ''
+      ].filter(Boolean);
+    }
+
+    function timeRank(v) {
+      if (!v) return 999999;
+      if (v === '24:00') return 24 * 60;
+      const m = String(v).match(/^(\d{1,2}):(\d{2})$/);
+      if (!m) return 999999;
+      return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+    }
+
+    function rowRank(t) {
+      return Math.min(timeRank(t.mattina), timeRank(t.pomeriggio), timeRank(t.sera));
+    }
+
+    function sortRows() {
+      const data = Array.from(document.querySelectorAll('#therapyBody tr')).map(readRow);
+      data.sort((a, b) => rowRank(a) - rowRank(b) || a.farmaco.localeCompare(b.farmaco));
+      therapyBody.innerHTML = '';
+      data.forEach(createRow);
+      renderPrintSheet();
+    }
+
+
+    function confirmNextWeek() {
+      const startInput = document.getElementById('printStartDate');
+      const currentStart = startInput.value || document.getElementById('p_ricovero').value || todayISO();
+      const nextStart = plusDays(currentStart, 7);
+
+      const rows = Array.from(document.querySelectorAll('#therapyBody tr'));
+      if (!rows.length) {
+        alert('Non ci sono terapie da confermare.');
+        return;
+      }
+
+      rows.forEach(tr => {
+        const inizio = tr.querySelector('.inizio');
+        const fine = tr.querySelector('.fine');
+
+        if (inizio.value && inizio.value < nextStart) {
+          inizio.value = nextStart;
+        } else if (!inizio.value) {
+          inizio.value = nextStart;
+        }
+
+        if (fine.value && fine.value < nextStart) {
+          fine.value = '';
+        }
+      });
+
+      startInput.value = nextStart;
+      renderPrintSheet();
+      alert('Terapia confermata per la settimana successiva. Data iniziale scheda aggiornata automaticamente.');
+    }
+
+    function isTherapyVisibleOnDate(t, dateISO, includeInactive = false) {
+      if (!includeInactive && !t.attiva) return false;
+      if (!dateISO) return includeInactive ? true : t.attiva;
+      const d = new Date(dateISO + 'T00:00:00');
+      const start = t.inizio ? new Date(t.inizio + 'T00:00:00') : null;
+      const end = t.fine ? new Date(t.fine + 'T00:00:00') : null;
+      if (start && d < start) return false;
+      if (end && d > end) return false;
+      return true;
+    }
+
+    function renderDayCell(t, dateISO, includeInactive) {
+      if (!isTherapyVisibleOnDate(t, dateISO, includeInactive)) return '';
+      const times = therapyTimes(t);
+      if (!times.length) return '';
+      return `
+        <div class="time">${escapeHtml(times.join(' · '))}</div>
+        <div>Somministrato</div>
+        <div class="sig">Firma ________</div>
+      `;
+    }
+
+
+    function renderDayCellExpanded(t, dateISO, includeInactive) {
+      if (!isTherapyVisibleOnDate(t, dateISO, includeInactive)) return '';
+      if (!t.ora && !t.fascia) return '';
+      return `
+        <div class="time">${escapeHtml((t.fascia || '') + (t.ora ? ' ' + t.ora : ''))}</div>
+        <div>Somministrato</div>
+        <div class="sig">Firma ________</div>
+      `;
+    }
+
+    function renderPrintSheet() {
+      const data = getData();
+      const startDate = data.printMeta.printStartDate || data.paziente.ricovero || todayISO();
+      const daysCount = 7;
+      const includeInactive = data.printMeta.showInactive === 'yes';
+      const days = Array.from({ length: daysCount }, (_, i) => plusDays(startDate, i));
+
+      const terapie = data.terapie
+        .filter(t => t.farmaco || t.dose || t.posologia || therapyTimes(t).length || t.note)
+        .sort((a,b) => rowRank(a) - rowRank(b) || a.farmaco.localeCompare(b.farmaco));
+
+      const headerDays = days.map(d => `<th class="day-head">${weekdayName(d)}<br>${formatDateIT(d)}</th>`).join('');
+      const expandedRows = [];
+      terapie.forEach((t) => {
+        const somministrazioni = [
+          t.mattina ? { fascia: 'Mattina', ora: t.mattina } : null,
+          t.pomeriggio ? { fascia: 'Pomeriggio', ora: t.pomeriggio } : null,
+          t.sera ? { fascia: 'Sera', ora: t.sera } : null
+        ].filter(Boolean);
+
+        if (!somministrazioni.length) {
+          expandedRows.push({ ...t, fascia: '', ora: '' });
+        } else {
+          somministrazioni.forEach(s => expandedRows.push({ ...t, fascia: s.fascia, ora: s.ora }));
+        }
+      });
+
+      const rows = expandedRows.map((t, i) => `
+        <tr>
+          <td class="center">${i + 1}</td>
+          <td><strong>${escapeHtml(t.farmaco || '')}</strong><br><span class="mini">${escapeHtml(t.note || '')}</span></td>
+          <td>${escapeHtml(t.dose || '')}</td>
+          <td>${escapeHtml(t.posologia || '')}</td>
+          <td>${escapeHtml(t.via || '')}</td>
+          ${days.map(d => `<td class="day-cell">${renderDayCellExpanded(t, d, includeInactive)}</td>`).join('')}
+        </tr>
+      `).join('');
+
+      document.getElementById('printSheet').innerHTML = `
+        <h2 style="margin-bottom:12px;">Scheda terapia infermieristica</h2>
+        <div class="print-header">
+          <div class="box"><strong>Paziente</strong><br>${escapeHtml(data.paziente.nome || '')}</div>
+          <div class="box"><strong>Data nascita</strong><br>${formatDateIT(data.paziente.nascita)}</div>
+          <div class="box"><strong>Reparto / cartella</strong><br>${escapeHtml((data.paziente.reparto || '') + (data.paziente.cartella ? ' - ' + data.paziente.cartella : ''))}</div>
+          <div class="box"><strong>Medico</strong><br>${escapeHtml(data.paziente.medico || '')}</div>
+          <div class="box"><strong>Data ricovero</strong><br>${formatDateIT(data.paziente.ricovero)}</div>
+          <div class="box"><strong>Inizio scheda</strong><br>${formatDateIT(startDate)}</div>
+          <div class="box"><strong>Durata scheda</strong><br>${daysCount} giorni</div>
+          <div class="box"><strong>Note</strong><br>${escapeHtml(data.printMeta.giornoNote || '')}</div>
+        </div>
+        <table class="sheet-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Farmaco / note</th>
+              <th>Dose</th>
+              <th>Posologia</th>
+              <th>Via</th>
+              ${headerDays}
+            </tr>
+          </thead>
+          <tbody>${rows || `<tr><td colspan="${5 + daysCount}" class="center">Nessuna terapia inserita.</td></tr>`}</tbody>
+        </table>
+        <div class="footer-note">Ogni cella giornaliera include spazio per la firma dell'infermiere che esegue la somministrazione.</div>
+      `;
+    }
+
+    function exportXLSX() {
+      const data = getData();
+      const wb = XLSX.utils.book_new();
+
+      const wsPaziente = XLSX.utils.json_to_sheet([
+        {Campo:'Nome e cognome', Valore:data.paziente.nome},
+        {Campo:'Data di nascita', Valore:data.paziente.nascita},
+        {Campo:'Reparto', Valore:data.paziente.reparto},
+        {Campo:'Cartella / letto', Valore:data.paziente.cartella},
+        {Campo:'Data ricovero', Valore:data.paziente.ricovero},
+        {Campo:'Medico', Valore:data.paziente.medico},
+        {Campo:'Data iniziale scheda', Valore:data.printMeta.printStartDate},
+        {Campo:'Numero giorni', Valore:data.printMeta.daysCount},
+        {Campo:'Note reparto', Valore:data.printMeta.giornoNote}
+      ]);
+      wsPaziente['!cols'] = [{wch: 24}, {wch: 36}];
+
+      const terapiePulite = data.terapie.map(t => ({
+        Attiva: t.attiva ? 'SI' : 'NO',
+        Farmaco: t.farmaco,
+        Dose: t.dose,
+        Posologia: t.posologia,
+        Via: t.via,
+        Mattina: t.mattina,
+        Pomeriggio: t.pomeriggio,
+        Sera: t.sera,
+        Data_inizio: t.inizio,
+        Data_fine: t.fine,
+        Note: t.note
+      }));
+      const wsTerapie = XLSX.utils.json_to_sheet(terapiePulite.length ? terapiePulite : [{Farmaco:''}]);
+      wsTerapie['!cols'] = [
+        {wch: 8},{wch: 28},{wch: 16},{wch: 16},{wch: 16},
+        {wch: 10},{wch: 12},{wch: 10},{wch: 12},{wch: 12},{wch: 30}
+      ];
+
+      const startDate = data.printMeta.printStartDate || data.paziente.ricovero || todayISO();
+      const daysCount = 7;
+      const includeInactive = data.printMeta.showInactive === 'yes';
+      const days = Array.from({ length: daysCount }, (_, i) => plusDays(startDate, i));
+
+      const weeklyExpandedRows = [];
+      data.terapie
+        .filter(t => t.farmaco || t.dose || t.posologia || therapyTimes(t).length || t.note)
+        .sort((a,b) => rowRank(a) - rowRank(b) || a.farmaco.localeCompare(b.farmaco))
+        .forEach(t => {
+          const somministrazioni = [
+            t.mattina ? { fascia: 'Mattina', ora: t.mattina } : null,
+            t.pomeriggio ? { fascia: 'Pomeriggio', ora: t.pomeriggio } : null,
+            t.sera ? { fascia: 'Sera', ora: t.sera } : null
+          ].filter(Boolean);
+
+          if (!somministrazioni.length) {
+            weeklyExpandedRows.push({ ...t, fascia: '', ora: '' });
+          } else {
+            somministrazioni.forEach(s => weeklyExpandedRows.push({ ...t, fascia: s.fascia, ora: s.ora }));
+          }
+        });
+
+      const weeklyRows = weeklyExpandedRows.map((t, idx) => {
+          const row = {
+            N: idx + 1,
+            Farmaco: t.farmaco,
+            Dose: t.dose,
+            Posologia: t.posologia,
+                Via: t.via
+          };
+          days.forEach(d => {
+            row[`${weekdayName(d)} ${formatDateIT(d)}`] = isTherapyVisibleOnDate(t, d, includeInactive)
+              ? `${t.fascia || ''} ${t.ora || ''} | Firma: ________`
+              : '';
+          });
+          return row;
+        });
+
+      const wsScheda = XLSX.utils.json_to_sheet(weeklyRows.length ? weeklyRows : [{N:'', Farmaco:'Nessuna terapia'}]);
+      wsScheda['!cols'] = [{wch:5},{wch:28},{wch:16},{wch:16},{wch:16}, ...days.map(() => ({wch: 24}))];
+
+      XLSX.utils.book_append_sheet(wb, wsPaziente, 'Paziente');
+      XLSX.utils.book_append_sheet(wb, wsTerapie, 'Terapie');
+      XLSX.utils.book_append_sheet(wb, wsScheda, 'Scheda_settimanale');
+
+      const name = safeName(data.paziente.nome || 'paziente');
+      XLSX.writeFile(wb, `scheda_terapia_${name}.xlsx`);
+    }
+
+    document.addEventListener('input', (e) => {
+      if (e.target.closest('#therapyBody') || e.target.id.startsWith('p_') || ['printStartDate','showInactive','giornoNote'].includes(e.target.id)) {
+        renderPrintSheet();
+      }
+    });
+    document.addEventListener('change', (e) => {
+      if (e.target.closest('#therapyBody') || ['printStartDate','showInactive'].includes(e.target.id)) {
+        renderPrintSheet();
+      }
+    });
+
+    document.getElementById('p_ricovero').value = todayISO();
+    document.getElementById('printStartDate').value = todayISO();
+    addRow();
+    renderPrintSheet();
+  </script>
+</body>
+</html>
