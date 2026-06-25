@@ -1,4 +1,4 @@
-
+ 
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -232,9 +232,61 @@
   }
 }
 
+
+
+    /* Schermata password */
+    #loginScreen {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #eef4ff 0%, #f6f8fb 55%, #e0f2f1 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 99999;
+      padding: 18px;
+    }
+    .login-card {
+      width: min(380px, 100%);
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 18px 50px rgba(15, 23, 42, 0.18);
+      padding: 28px;
+      text-align: center;
+    }
+    .login-lock {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 14px;
+      background: var(--soft);
+      color: var(--accent);
+      font-size: 28px;
+    }
+    .login-card h2 { margin-bottom: 6px; }
+    .login-card p { margin: 0 0 18px; color: var(--muted); font-size: 13px; }
+    .login-card input { text-align: center; font-size: 18px; letter-spacing: 1px; }
+    .login-card button { width: 100%; margin-top: 12px; }
+    #loginError { min-height: 18px; color: var(--danger); margin-top: 10px; font-size: 13px; font-weight: 700; }
+    @media print { #loginScreen { display: none !important; } }
+
 </style>
 </head>
 <body>
+
+  <div id="loginScreen" aria-label="Accesso protetto">
+    <div class="login-card">
+      <div class="login-lock">🔒</div>
+      <h2>Accesso scheda terapia</h2>
+      <p>Inserire la password per continuare.</p>
+      <input type="password" id="passwordInput" placeholder="Password" autocomplete="current-password" autofocus>
+      <button type="button" onclick="checkPassword()">Entra</button>
+      <div id="loginError"></div>
+    </div>
+  </div>
+
   <div class="app">
     <h1>Scheda terapia ricovero</h1>
     <div class="sub">Modifica rapida delle terapie, scheda infermieristica settimanale stampabile in PDF ed esportazione in XLSX.</div>
@@ -786,6 +838,36 @@
     document.addEventListener('change', (e) => {
       if (e.target.closest('#therapyBody') || ['printStartDate','showInactive'].includes(e.target.id)) {
         renderPrintSheet();
+      }
+    });
+
+
+
+    const APP_PASSWORD = "TZONE";
+
+    function checkPassword() {
+      const input = document.getElementById('passwordInput');
+      const error = document.getElementById('loginError');
+      const loginScreen = document.getElementById('loginScreen');
+      const pwd = input.value;
+
+      if (pwd === APP_PASSWORD) {
+        loginScreen.style.display = 'none';
+        error.textContent = '';
+      } else {
+        error.textContent = 'Password non corretta';
+        input.value = '';
+        input.focus();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const input = document.getElementById('passwordInput');
+      if (input) {
+        input.focus();
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') checkPassword();
+        });
       }
     });
 
